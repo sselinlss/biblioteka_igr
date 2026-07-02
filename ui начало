@@ -1,0 +1,38 @@
+from PyQt5.QtWidgets import (
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+    QFormLayout, QPushButton, QLineEdit, QLabel,
+    QTableWidget, QTableWidgetItem, QHeaderView,
+    QMessageBox, QFileDialog, QComboBox, QSpinBox,
+    QSplitter, QGroupBox
+)
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPixmap, QImage
+from PIL import Image
+import database
+
+
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Библиотека видеоигр")
+        self.resize(1200, 700)
+        self.setMinimumSize(900, 500)
+
+        self.setStyleSheet("""
+                    QMainWindow {
+                        background-color: #e3a9be;
+                    }
+                """)
+
+        # база данных
+        self.db = database.DatabaseManager()
+        self.db.init_db()
+
+        # интерфейс
+        self._setup_ui()
+
+        # привязка сигналов
+        self._bind_signals()
+
+        # загрузка данных
+        self._refresh_table()
