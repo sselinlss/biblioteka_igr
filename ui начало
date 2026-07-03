@@ -36,3 +36,27 @@ class MainWindow(QMainWindow):
 
         # загрузка данных
         self._refresh_table()
+
+        # в этом коммите добавлен поиск постеров по нескольким путям
+    def _get_image_path(self, path):
+        if not path:
+            return None
+
+        if os.path.exists(path):
+            return path
+
+        project_dir = os.path.dirname(os.path.abspath(__file__))
+        relative_path = os.path.join(project_dir, path)
+        if os.path.exists(relative_path):
+            return relative_path
+
+        filename = os.path.basename(path)
+        possible_path = os.path.join(project_dir, "assets", "posters", filename)
+        if os.path.exists(possible_path):
+            return possible_path
+
+        possible_path2 = os.path.join(project_dir, "posters", filename)
+        if os.path.exists(possible_path2):
+            return possible_path2
+
+        return None
