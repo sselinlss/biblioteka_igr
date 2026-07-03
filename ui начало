@@ -9,6 +9,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap, QImage
 from PIL import Image
 import database
+import os
 
 
 class MainWindow(QMainWindow):
@@ -19,25 +20,21 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(900, 500)
 
         self.setStyleSheet("""
-                    QMainWindow {
-                        background-color: #e3a9be;
-                    }
-                """)
+            QMainWindow {
+                background-color: #8498d9;
+            }
+        """)
 
-        # база данных
         self.db = database.DatabaseManager()
         self.db.init_db()
 
-        # интерфейс
+        self.current_id = None
+        self.current_image_path = ""
+
         self._setup_ui()
-
-        # привязка сигналов
         self._bind_signals()
-
-        # загрузка данных
         self._refresh_table()
 
-        # в этом коммите добавлен поиск постеров по нескольким путям
     def _get_image_path(self, path):
         if not path:
             return None
@@ -60,3 +57,100 @@ class MainWindow(QMainWindow):
             return possible_path2
 
         return None
+
+    def _setup_ui(self):
+        central = QWidget()
+        self.setCentralWidget(central)
+        main_layout = QHBoxLayout(central)
+
+        left_widget = QWidget()
+        left_layout = QVBoxLayout(left_widget)
+
+        filter_layout = QHBoxLayout()
+        filter_layout.addWidget(QLabel("Фильтр по платформе:"))
+        self.cb_filter = QComboBox()
+        self.cb_filter.addItem("Все")
+        self.cb_filter.addItems(["PC", "PS5", "Xbox", "Mobile"])
+        filter_layout.addWidget(self.cb_filter)
+        left_layout.addLayout(filter_layout)
+
+        self.table = QTableWidget()
+        self.table.setColumnCount(6)
+        self.table.setHorizontalHeaderLabels([
+            "Постер", "Название", "Платформа", "Часы", "Статус", "Оценка"
+        ])
+        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.table.setSelectionBehavior(QTableWidget.SelectRows)
+        self.table.setEditTriggers(QTableWidget.NoEditTriggers)
+
+        self.table.verticalHeader().setDefaultSectionSize(200)  # высота строки
+        self.table.setColumnWidth(0, 140)  # ширина колонки с постером
+
+        left_layout.addWidget(self.table)
+
+        btn_layout = QHBoxLayout()
+        self.btn_add = QPushButton("Добавить")
+        self.btn_edit = QPushButton("Изменить")
+        self.btn_delete = QPushButton("Удалить")
+        self.btn_clear = QPushButton("Очистить поля")
+        btn_layout.addWidget(self.btn_add)
+        btn_layout.addWidget(self.btn_edit)
+        btn_layout.addWidget(self.btn_delete)
+        btn_layout.addWidget(self.btn_clear)
+        left_layout.addLayout(btn_layout)
+
+        right_widget = QWidget()
+        right_layout = QVBoxLayout(right_widget)
+
+        form_group = QGroupBox("Информация об игре")
+        form_layout = QFormLayout(form_group)
+
+        self.le_title = QLineEdit()
+        self.le_title.setPlaceholderText("Введите название")
+        form_layout.addRow("Название:", self.le_title)
+
+        self.cb_platform = QComboBox()
+        self.cb_platform.addItems(["PC", "PS5", "Xbox", "Mobile"])
+        form_layout.addRow("Платформа:", self.cb_platform)
+
+        self.sb_hours = QSpinBox()
+        self.sb_hours.setRange(0, 9999)
+        self.sb_hours.setSuffix(" ч")
+        form_layout.addRow("Часы игры:", self.sb_hours)
+
+        self.cb_status = QComboBox()
+        self.cb_status.addItems(["Не начата", "В процессе", "Пройдена"])
+        form_layout.addRow("Статус:", self.cb_status)
+
+        self.sb_rating = QSpinBox()
+        self.sb_rating.setRange(1, 10)
+        form_layout.addRow("Оценка (1-10):", self.sb_rating)
+
+        right_layout.addWidget(form_group)
+
+        poster_group = QGroupBox("Постер игры")
+        poster_layout = QVBoxLayout(poster_group)
+
+        self.lbl_poster = QLabel("Постер игры")
+        self.lbl_poster.setAlignment(Qt.AlignCenter)
+        self.lbl_poster.setMinimumHeight(250)
+        self.lbl_poster.setStyleSheet("""
+            background-color: #f0f0f0;
+            border: 2px dashed #aaa;
+            border-radius: 10px;
+            font-size: 16px;
+            color: #666;
+        """)
+        poster_layout.addWidget(self.lbl_poster)
+
+        self.btn_load_poster = QPushButton("Загрузить постер")
+        poster_layout.addWidget(self.btn_load_poster)
+        right_layout.addWidget(poster_group)
+
+        right_layout.addStretch()
+
+        splitter = QSplitter(Qt.Horizontal)
+        splitter.addWidget(left_widget)
+        splitter.addWidget(right_widget)
+        splitter.setSizes([700, 350])
+        main_layout.addWidget(splitter)
