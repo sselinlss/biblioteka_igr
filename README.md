@@ -6,10 +6,10 @@
 
 ## Скриншоты
 
-![Главное окно](docs/screenshots/mw.PNG)  
+![Главное окно](docsscreenshots/mw.PNG)  
 *Рисунок 1 — Главное окно приложения*
 
-![Фильтрация по платформе](docs/screenshots/fil.PNG)  
+![Фильтрация по платформе](docsscreenshots/fil.PNG)  
 *Рисунок 2 — Фильтрация по платформе*
 
 ---
