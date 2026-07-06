@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+
+# Виртуальное окружение
+venv/
+env/
+.venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Файлы операционной системы
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# База данных
+*.db
+*.sqlite3
+*.sqlite
+*.db-journal
+
+# Логи
+*.log
+
+# Временные файлы
+*.tmp
+*.temp
+
+# Папка с данными 
+data/
+!data/.gitkeep
+
+# Папка с постерами (если хочешь хранить их в репозитории — не добавляй эту строку)
+assets/posters/
+!assets/posters/.gitkeep
