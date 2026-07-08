@@ -10,6 +10,17 @@ from PyQt5.QtGui import QPixmap, QImage
 from PIL import Image
 import database
 import os
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('app.log', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -18,14 +29,11 @@ class MainWindow(QMainWindow):
         self.resize(1200, 700)
         self.setMinimumSize(900, 500)
 
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #8498d9;
-            }
-        """)
+        self.setStyleSheet("""QMainWindow {background-color: #8498d9;}""")
 
         self.db = database.DatabaseManager()
         self.db.init_db()
+        logging.info("База данных инициализирована")
 
         self.current_id = None
         self.current_image_path = ""
@@ -33,6 +41,7 @@ class MainWindow(QMainWindow):
         self._setup_ui()
         self._bind_signals()
         self._refresh_table()
+        logging.info("Приложение запущено")
 
     def _get_image_path(self, path):
         if not path:
@@ -133,13 +142,8 @@ class MainWindow(QMainWindow):
         self.lbl_poster = QLabel("Постер игры")
         self.lbl_poster.setAlignment(Qt.AlignCenter)
         self.lbl_poster.setMinimumHeight(250)
-        self.lbl_poster.setStyleSheet("""
-            background-color: #f0f0f0;
-            border: 2px dashed #aaa;
-            border-radius: 10px;
-            font-size: 16px;
-            color: #666;
-        """)
+        self.lbl_poster.setStyleSheet(
+            """background-color: #f0f0f0; border: 2px dashed #aaa; border-radius: 10px; font-size: 16px; color: #666;""")
         poster_layout.addWidget(self.lbl_poster)
 
         self.btn_load_poster = QPushButton("Загрузить постер")
@@ -168,14 +172,10 @@ class MainWindow(QMainWindow):
             real_path = self._get_image_path(path)
 
             if not real_path:
+                logging.warning(f"Постер не найден: {path}")
                 self.lbl_poster.setText("Постер не найден")
-                self.lbl_poster.setStyleSheet("""
-                    background-color: #f0f0f0;
-                    border: 2px solid #ff4444;
-                    border-radius: 10px;
-                    font-size: 16px;
-                    color: #666;
-                """)
+                self.lbl_poster.setStyleSheet(
+                    """background-color: #f0f0f0; border: 2px solid #ff4444; border-radius: 10px; font-size: 16px; color: #666;""")
                 return
 
             img = Image.open(real_path).convert("RGBA")
@@ -192,17 +192,13 @@ class MainWindow(QMainWindow):
             self.lbl_poster.setPixmap(pixmap)
             self.lbl_poster.setAlignment(Qt.AlignCenter)
             self.lbl_poster.setStyleSheet("border: 2px solid #4CAF50; border-radius: 10px;")
+            logging.info(f"Постер загружен: {real_path}")
 
         except Exception as e:
+            logging.error(f"Ошибка загрузки постера: {e}")
             self.lbl_poster.setText("Ошибка загрузки")
-            self.lbl_poster.setStyleSheet("""
-                background-color: #f0f0f0;
-                border: 2px solid #ff4444;
-                border-radius: 10px;
-                font-size: 16px;
-                color: #666;
-            """)
-            print(f"Ошибка загрузки постера: {e}")
+            self.lbl_poster.setStyleSheet(
+                """ background-color: #f0f0f0; border: 2px solid #ff4444; border-radius: 10px; font-size: 16px; color: #666;""")
 
     def _on_select_row(self):
         try:
@@ -214,12 +210,12 @@ class MainWindow(QMainWindow):
 
             id_item = self.table.item(row, 1)
             if id_item is None:
-                print("Ошибка: ячейка с ID пустая")
+                logging.warning("Ячейка с ID пустая")
                 return
 
             self.current_id = id_item.data(Qt.UserRole)
             if self.current_id is None:
-                print("Ошибка: ID игры не найден")
+                logging.warning("ID игры не найден")
                 return
 
             title_item = self.table.item(row, 1)
@@ -244,15 +240,10 @@ class MainWindow(QMainWindow):
                 self._load_poster_from_path(game[6])
             else:
                 self.lbl_poster.setText("Постер отсутствует")
-                self.lbl_poster.setStyleSheet("""
-                    background-color: #f0f0f0;
-                    border: 2px dashed #aaa;
-                    border-radius: 10px;
-                    font-size: 16px;
-                    color: #666;
-                """)
+                self.lbl_poster.setStyleSheet(
+                    """background-color: #f0f0f0; border: 2px dashed #aaa; border-radius: 10px; font-size: 16px; color: #666;""")
         except Exception as e:
-            print(f"Ошибка при выборе строки: {e}")
+            logging.error(f"Ошибка при выборе строки: {e}")
             QMessageBox.warning(self, "Ошибка", f"Не удалось загрузить данные:\n{e}")
 
     def _refresh_table(self):
@@ -288,11 +279,11 @@ class MainWindow(QMainWindow):
                         label.setAlignment(Qt.AlignCenter)
                         self.table.setCellWidget(i, 0, label)
                     except Exception as e:
-                        print(f"Ошибка загрузки мини-постера: {e}")
+                        logging.error(f"Ошибка загрузки мини-постера: {e}")
                 else:
-                    print(f"Файл не найден: {image_path}")
+                    logging.warning(f"Файл не найден: {image_path}")
             else:
-                print(f"Нет пути к постеру для игры {game[1]}")
+                logging.warning(f"Нет пути к постеру для игры {game[1]}")
 
             self.table.setItem(i, 1, QTableWidgetItem(game[1]))
             self.table.setItem(i, 2, QTableWidgetItem(game[2]))
@@ -308,6 +299,7 @@ class MainWindow(QMainWindow):
 
     def _on_add(self):
         if not self.le_title.text().strip():
+            logging.warning("Попытка добавить игру без названия")
             QMessageBox.warning(self, "Ошибка", "Название обязательно!")
             self.le_title.setFocus()
             return
@@ -330,6 +322,7 @@ class MainWindow(QMainWindow):
             if path:
                 project_dir = os.path.dirname(os.path.abspath(__file__))
                 poster_path = os.path.relpath(path, project_dir)
+                logging.info(f"Выбран постер: {poster_path}")
 
         data = {
             "title": self.le_title.text().strip(),
@@ -343,10 +336,12 @@ class MainWindow(QMainWindow):
         self.db.insert_game(data)
         self._refresh_table()
         self._clear_fields()
+        logging.info(f"Игра добавлена: {data['title']}")
         QMessageBox.information(self, "Успех", "Игра добавлена!")
 
     def _on_edit(self):
         if not self.current_id:
+            logging.warning("Попытка редактирования без выбранной игры")
             QMessageBox.warning(self, "Внимание", "Выберите игру!")
             return
 
@@ -362,10 +357,12 @@ class MainWindow(QMainWindow):
 
         self.db.update_game(data)
         self._refresh_table()
+        logging.info(f"Игра обновлена: {data['title']} (ID: {self.current_id})")
         QMessageBox.information(self, "Успех", "Игра обновлена!")
 
     def _on_delete(self):
         if not self.current_id:
+            logging.warning("Попытка удаления без выбранной игры")
             QMessageBox.warning(self, "Внимание", "Выберите игру!")
             return
 
@@ -376,12 +373,16 @@ class MainWindow(QMainWindow):
         )
 
         if reply == QMessageBox.Yes:
+            game = self.db.get_game_by_id(self.current_id)
+            title = game[1] if game else "Unknown"
             self.db.delete_game(self.current_id)
             self._refresh_table()
             self._clear_fields()
+            logging.info(f"Игра удалена: {title} (ID: {self.current_id})")
 
     def _on_load_poster(self):
         if not self.current_id:
+            logging.warning("Попытка загрузки постера без выбранной игры")
             QMessageBox.warning(self, "Внимание", "Сначала выберите игру в таблице!")
             return
 
@@ -424,8 +425,10 @@ class MainWindow(QMainWindow):
                 'image_path': rel_path
             })
             self._refresh_table()
+            logging.info(f"Постер загружен для игры ID {self.current_id}: {rel_path}")
 
         except Exception as e:
+            logging.error(f"Ошибка загрузки постера: {e}")
             QMessageBox.critical(self, "Ошибка", f"Не удалось загрузить:\n{e}")
 
     def _clear_fields(self):
@@ -444,6 +447,7 @@ class MainWindow(QMainWindow):
         """)
         self.current_image_path = ''
         self.current_id = None
+        logging.info("Поля очищены")
 
     def closeEvent(self, event):
         reply = QMessageBox.question(
@@ -455,6 +459,7 @@ class MainWindow(QMainWindow):
 
         if reply == QMessageBox.Yes:
             self.db.close()
+            logging.info("Приложение закрыто")
             event.accept()
         else:
             event.ignore()
